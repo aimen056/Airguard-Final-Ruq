@@ -92,3 +92,9 @@ const toggleAlertStatus = async (req, res) => {
   }
 };
 module.exports = {createAlert,getAllAlerts,deleteAlert, updateAlert,  getAlertById  ,toggleAlertStatus  }
+
+
+
+
+
+

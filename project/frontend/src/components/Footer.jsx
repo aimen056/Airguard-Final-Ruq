@@ -33,7 +33,7 @@ const Footer = () => {
     </li>
     <li>
       <a 
-        href="/about" 
+        href="/about-air-quality" 
         className="transition-all duration-300 transform text-[rgb(10,132,255)] hover:text-white hover:-translate-y-1"
       >
         About Air Quality
@@ -41,10 +41,10 @@ const Footer = () => {
     </li>
     <li>
       <a 
-        href="/zones" 
+        href="/about-us" 
         className="transition-all duration-300 transform text-[rgb(10,132,255)] hover:text-white hover:-translate-y-1"
       >
-        Zones
+        About Us
       </a>
     </li>
   </ul>

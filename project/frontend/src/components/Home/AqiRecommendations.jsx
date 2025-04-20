@@ -50,7 +50,7 @@ const AqiRecommendations = ({ aqi }) => {
   const { level, message, actions } = getRecommendations(aqi);
 
   return (
-    <div className="p-4 shadow-2xl border rounded-lg">
+    <div className="p-4 shadow-2xl rounded-lg">
       <h3 className="text-lg font-semibold text-center uppercase mb-2 text-gray-800">
         Air Quality Recommendations
       </h3>

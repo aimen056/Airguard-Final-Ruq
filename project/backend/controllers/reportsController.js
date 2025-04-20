@@ -1,49 +1,58 @@
-const PollutionReport = require("../models/ReportModel");
-// Create a pollution report
-const createPollutionReport = async (req, res) => {
+const PollutionReport = require('../models/ReportModel');
+
+// Create a new pollution report
+exports.createPollutionReport = async (req, res) => {
   try {
-    const report = new PollutionReport(req.body);
-    await report.save();
-    res.status(201).json(report);
+    const { description, location, pollutionType } = req.body;
+    const user = req.user?.name || "Anonymous";
+    
+    const newReport = new PollutionReport({
+      description,
+      location,
+      pollutionType,
+      user,
+      date: new Date().toLocaleString()
+    });
+
+    await newReport.save();
+    res.status(201).json(newReport);
   } catch (error) {
-    res.status(500).json({ message: "Failed to create report", error });
+    res.status(500).json({ message: error.message });
   }
 };
 
 // Get all pollution reports
-const getAllPollutionReports = async (req, res) => {
+exports.getAllPollutionReports = async (req, res) => {
   try {
-    const reports = await PollutionReport.find();
-    res.status(200).json(reports); // Ensure this is an array
+    const reports = await PollutionReport.find().sort({ createdAt: -1 });
+    res.json(reports);
   } catch (error) {
-    res.status(500).json({ message: "Failed to fetch reports", error });
+    res.status(500).json({ message: error.message });
   }
 };
 
-// Update a pollution report
-const updatePollutionReport = async (req, res) => {
+// Update a pollution report (for admin verification)
+exports.updatePollutionReport = async (req, res) => {
   try {
+    const { isVerified, resolved } = req.body;
     const updatedReport = await PollutionReport.findByIdAndUpdate(
       req.params.id,
-      req.body,
+      { isVerified, resolved },
       { new: true }
     );
-    res.status(200).json(updatedReport);
+    res.json(updatedReport);
   } catch (error) {
-    res.status(500).json({ message: "Failed to update report", error });
+    res.status(500).json({ message: error.message });
   }
 };
 
 // Delete a pollution report
-const deletePollutionReport = async (req, res) => {
+exports.deletePollutionReport = async (req, res) => {
   try {
     await PollutionReport.findByIdAndDelete(req.params.id);
-    res.status(200).json({ message: "Report deleted successfully" });
+    res.json({ message: 'Report deleted successfully' });
   } catch (error) {
-    res.status(500).json({ message: "Failed to delete report", error });
+    res.status(500).json({ message: error.message });
   }
 };
 
-
-// Replace export with:
-module.exports = { createPollutionReport, getAllPollutionReports, updatePollutionReport,deletePollutionReport };

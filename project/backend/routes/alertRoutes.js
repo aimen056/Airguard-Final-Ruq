@@ -17,3 +17,4 @@ router.delete("/:id", deleteAlert);
 router.patch("/:id/toggle-status", toggleAlertStatus);
 
 module.exports = router;
+

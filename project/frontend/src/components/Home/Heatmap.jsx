@@ -1,3 +1,4 @@
+
 import { useEffect, useMemo, useState, useRef } from "react";
 import * as d3 from "d3";
 
@@ -49,7 +50,7 @@ const Heatmap = ({ data }) => {
   ));
 
   const xLabels = allXGroups.map((name, i) => (
-    <text key={i} x={xScale(name) + xScale.bandwidth() / 2} y={boundsHeight + 20} textAnchor="middle" fontSize={Math.max(10, width * 0.02)}>
+    <text className="text-primaryText" key={i} x={xScale(name) + xScale.bandwidth() / 2} y={boundsHeight + 20} textAnchor="middle" fontSize={Math.max(10, width * 0.02)}>
       {name}
     </text>
   ));

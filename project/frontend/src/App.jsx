@@ -2,8 +2,6 @@ import React, { useState, useEffect } from "react";
 import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
 import { Provider } from "react-redux";
 import { AuthProvider } from "./context/AuthContext";
-import { AirQualityProvider } from "./context/AirQualityContext";
-import { ObservationsProvider } from "./context/AirObservationContext";
 import ProtectedRoute from "./components/ProtectedRoute";
 import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
@@ -22,28 +20,30 @@ import HomeMap from "./components/HomeMap";
 import { Toaster } from "react-hot-toast";
 import store from "./redux/store";
 import UserNavBar from "./components/usernavbar";
-import AdminNavBar from "./components/Adminnavbar"; 
+import AdminNavBar from "./components/Adminnavbar";
+import EditProfile from "./components/EditProfile"; // Add this import
 
 function Layout({ children }) {
   const location = useLocation();
   const hideHeaderFooter = location.pathname === "/login";
   const noFooterPages = ["/dashboard"]; // Pages without footer
-  const userPages = ["/userdashboard", "/historicalReport", "/manageAlert", "/report"];
+  const userPages = ["/userdashboard", "/historicalReport", "/manageAlert", "/report", "/edit-profile"];
   const adminPages = ["/dashboard", "/historicalReportAdmin"]; // Pages for admin
 
   const isUserPage = userPages.includes(location.pathname);
-  const isAdminPage = adminPages.includes(location.pathname); // Check if it's an admin page
+  const isAdminPage = adminPages.includes(location.pathname);
 
   return (
     <>
-      {!hideHeaderFooter && !isUserPage && !isAdminPage && <Navbar />} {/* Show default Navbar for non-user and non-admin pages */}
-      {!hideHeaderFooter && isUserPage && <UserNavBar />} {/* Show UserNavBar for user pages */}
-      {!hideHeaderFooter && isAdminPage && <AdminNavBar />} {/* Show AdminNavBar for admin pages */}
+      {!hideHeaderFooter && !isUserPage && !isAdminPage && <Navbar />}
+      {!hideHeaderFooter && isUserPage && <UserNavBar />}
+      {!hideHeaderFooter && isAdminPage && <AdminNavBar />}
       {children}
-      {!hideHeaderFooter && !isUserPage && !isAdminPage && !noFooterPages.includes(location.pathname) && <Footer />} {/* Hide footer for specific pages */}
+      {!hideHeaderFooter && !isUserPage && !isAdminPage && !noFooterPages.includes(location.pathname) && <Footer />}
     </>
   );
 }
+
 function App() {
   const [apiMessage, setApiMessage] = useState("");
 
@@ -60,37 +60,39 @@ function App() {
   return (
     <Provider store={store}>
       <AuthProvider>
-        <AirQualityProvider>
-          <ObservationsProvider>
-            <BrowserRouter>
-              <Toaster />
-              <Routes>
-                <Route path="/" element={<Layout><Home /></Layout>} />
-                <Route path="/about-air-quality" element={<Layout><AboutAirQuality /></Layout>} />
-                <Route path="/login" element={<LoginPage />} />
-                <Route path="/about-us" element={<Layout><AboutUs /></Layout>} />
-                <Route path="/fullscreenMap" element={<Layout><FullscreenMapPage /></Layout>} />
-                <Route path="/dashboard" element={
-                  <ProtectedRoute>
-                    <Layout><Dashboard /></Layout>
-                  </ProtectedRoute>
-                } />
-                <Route path="/userdashboard" element={
-                  <ProtectedRoute>
-                    <Layout><UserDashboard /></Layout>
-                  </ProtectedRoute>
-                } />
-                 <Route path="/historicalReportAdmin" element={<Layout><HistoricalReportAdmin /></Layout>} />
-                <Route path="/historicalReport" element={<Layout><HistoricalReport /></Layout>} />
-                <Route path="/manageAlert" element={<Layout><ManageAlert /></Layout>} />
-                <Route path="/manageAlert/:id" element={<Layout><ManageAlert /></Layout>} />
-                <Route path="/report" element={<Layout><ReportPollution /></Layout>} />
-                <Route path="/homemap" element={<Layout><HomeMap /></Layout>} />
-                <Route path="*" element={<div>Not Found</div>} />
-              </Routes>
-            </BrowserRouter>
-          </ObservationsProvider>
-        </AirQualityProvider>
+        <BrowserRouter>
+          <Toaster />
+          <Routes>
+            <Route path="/" element={<Layout><Home /></Layout>} />
+            <Route path="/about-air-quality" element={<Layout><AboutAirQuality /></Layout>} />
+            <Route path="/login" element={<LoginPage />} />
+            <Route path="/about-us" element={<Layout><AboutUs /></Layout>} />
+            <Route path="/fullscreenMap" element={<Layout><FullscreenMapPage /></Layout>} />
+            <Route path="/dashboard" element={
+              <ProtectedRoute>
+                <Layout><Dashboard /></Layout>
+              </ProtectedRoute>
+            } />
+            <Route path="/userdashboard" element={
+              <ProtectedRoute>
+                <Layout><UserDashboard /></Layout>
+              </ProtectedRoute>
+            } />
+            <Route path="/historicalReportAdmin" element={<Layout><HistoricalReportAdmin /></Layout>} />
+            <Route path="/historicalReport" element={<Layout><HistoricalReport /></Layout>} />
+            <Route path="/manageAlert" element={<Layout><ManageAlert /></Layout>} />
+            <Route path="/manageAlert/:id" element={<Layout><ManageAlert /></Layout>} />
+            <Route path="/report" element={<Layout><ReportPollution /></Layout>} />
+            <Route path="/homemap" element={<Layout><HomeMap /></Layout>} />
+            {/* Add the EditProfile route */}
+            <Route path="/edit-profile" element={
+              <ProtectedRoute>
+                <Layout><EditProfile /></Layout>
+              </ProtectedRoute>
+            } />
+            <Route path="*" element={<div>Not Found</div>} />
+          </Routes>
+        </BrowserRouter>
       </AuthProvider>
     </Provider>
   );

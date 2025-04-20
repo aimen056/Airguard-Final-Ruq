@@ -39,30 +39,27 @@ const ReportPollution = () => {
   ];
 
   const onSubmit = (data) => {
+    const user = JSON.parse(localStorage.getItem("user"));
+    
     const newReport = {
       description: data.description,
       location: data.location,
-      pollutionType:
-        data.pollutionType === "Other" ? data.customType : data.pollutionType,
-      date: editingReport ? editingReport.date : new Date().toLocaleString(),
+      pollutionType: data.pollutionType === "Other" ? data.customType : data.pollutionType,
+      date: new Date().toLocaleString(),
+      user: user?.name || "Anonymous",
+      isVerified: false,
+      resolved: false
     };
-
+  
     if (editingReport) {
       dispatch(editReport({ ...newReport, id: editingReport._id }));
     } else {
       dispatch(addReport(newReport));
     }
-
-    // Reset the form and clear the editing state
+  
     setEditingReport(null);
-    reset({
-      description: "",
-      location: "",
-      pollutionType: "",
-      customType: "",
-    });
+    reset();
   };
-
   const handleEdit = (report) => {
     setEditingReport(report);
     reset({
@@ -204,7 +201,7 @@ const ReportPollution = () => {
         ) : (
           <div className="relative overflow-x-auto border border-primaryText/20 rounded-t-3xl mt-4 mx-3 ">
             <table className="w-full text-sm">
-              <thead className="text-xs text-gray-900 uppercase bg-primaryBtnText/20 dark:bg-primaryBtnText/50">
+              <thead className="text-xs text-primaryText uppercase bg-primaryBtnText/20 dark:bg-primaryBtnText/50">
                 <tr>
                   <th className="px-6 py-3 text-center">Pollution Type</th>
                   <th className="px-6 py-3 text-center">Description</th>
@@ -216,7 +213,7 @@ const ReportPollution = () => {
               <tbody className="bg-white dark:bg-surfaceColor divide-y divide-gray-200">
                 {pollutions.map((report) => (
                   <tr
-                    key={report.id}
+                    key={report._id}
                     className="hover:bg-gray-100 dark:hover:bg-gray-800"
                   >
                     <td className="px-4 py-4 text-center">

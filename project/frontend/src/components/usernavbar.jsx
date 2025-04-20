@@ -145,21 +145,28 @@ const UserNavBar = () => {
             className="h-6 w-6 cursor-pointer"
             onClick={() => setProfileMenuOpen((prev) => !prev)}
           />
-          {profileMenuOpen && (
-            <div className="absolute top-11 left-1/2 transform -translate-x-1/2 z-50 w-32 text-base dark:text-gray-100 bg-white divide-y divide-gray-100 rounded-lg shadow dark:bg-gray-700">
-              <ul className="py-2 text-center">
-                <li className="px-4 py-2 text-sm dark:hover:text-primaryText dark:hover:bg-gray-600 hover:bg-gray-100 border-b border-b-gray-400 cursor-pointer">
-                  Profile
-                </li>
-                <li
-                  className="px-4 py-2 text-sm dark:hover:text-primaryText dark:hover:bg-gray-600 hover:bg-gray-100 cursor-pointer"
-                  onClick={handleLogout} // Call handleLogout on click
-                >
-                  Logout
-                </li>
-              </ul>
-            </div>
-          )}
+          
+{profileMenuOpen && (
+  <div className="absolute top-11 left-1/2 transform -translate-x-1/2 z-50 w-32 text-base dark:text-gray-100 bg-white divide-y divide-gray-100 rounded-lg shadow dark:bg-gray-700">
+    <ul className="py-2 text-center">
+      <li 
+        className="px-4 py-2 text-sm dark:hover:text-primaryText dark:hover:bg-gray-600 hover:bg-gray-100 border-b border-b-gray-400 cursor-pointer"
+        onClick={() => {
+          setProfileMenuOpen(false);
+          navigate("/edit-profile");
+        }}
+      >
+        Profile
+      </li>
+      <li
+        className="px-4 py-2 text-sm dark:hover:text-primaryText dark:hover:bg-gray-600 hover:bg-gray-100 cursor-pointer"
+        onClick={handleLogout}
+      >
+        Logout
+      </li>
+    </ul>
+  </div>
+)}
         </div>
 
         {/* Mobile Menu Toggle */}

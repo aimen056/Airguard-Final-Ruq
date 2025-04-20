@@ -1,5 +1,6 @@
+
 import React, { useEffect, useState } from "react";
-import Modal from "../components/ManageAlert";
+import Modal from "../components/Modal";
 import { useDispatch, useSelector } from "react-redux";
 import { motion } from "framer-motion";
 import {

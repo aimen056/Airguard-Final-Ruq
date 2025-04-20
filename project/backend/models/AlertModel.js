@@ -69,3 +69,5 @@ const AlertSchema = new Schema({
 });
 
 module.exports = model("Alert", AlertSchema);
+
+

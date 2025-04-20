@@ -1,0 +1,192 @@
+{
+    "sensorLocations": [
+      {
+        "zone": "Zone 1",
+        "locationName": "Downtown Commercial Area",
+        "lat": 33.546768,
+        "lon": 73.184011,
+        "threshold": 150,
+        "pollutants": {
+          "pm2_5": 45,
+          "pm10": 62,
+          "o3": 28,
+          "no2": 35,
+          "so2": 12,
+          "co": 1.8
+        }
+      },
+      {
+        "zone": "Zone 2",
+        "locationName": "Industrial Zone East",
+        "lat": 33.548322,
+        "lon": 73.184974,
+        "threshold": 200,
+        "pollutants": {
+          "pm2_5": 78,
+          "pm10": 95,
+          "o3": 42,
+          "no2": 58,
+          "so2": 25,
+          "co": 3.2
+        }
+      },
+      {
+        "zone": "Zone 3",
+        "locationName": "Residential District North",
+        "lat": 33.545026,
+        "lon": 73.18469,
+        "threshold": 180,
+        "pollutants": {
+          "pm2_5": 32,
+          "pm10": 48,
+          "o3": 35,
+          "no2": 28,
+          "so2": 8,
+          "co": 1.2
+        }
+      },
+      {
+        "zone": "Zone 4",
+        "locationName": "University Campus",
+        "lat": 33.543215,
+        "lon": 73.182456,
+        "threshold": 120,
+        "pollutants": {
+          "pm2_5": 22,
+          "pm10": 35,
+          "o3": 18,
+          "no2": 15,
+          "so2": 5,
+          "co": 0.8
+        }
+      }
+    ],
+    "aqiRecords": [
+      {
+        "zone": "Zone 1",
+        "locationName": "Downtown Commercial Area",
+        "timestamp": "2023-11-15T08:00:00Z",
+        "meteorologicalData": {
+          "temperature": 24.5,
+          "humidity": 65,
+          "pressure": 1012,
+          "windSpeed": 3.2,
+          "windDirection": 180,
+          "precipitation": 0
+        },
+        "pollutants": {
+          "pm2_5": { "concentration": 45, "aqi": 125 },
+          "pm10": { "concentration": 62, "aqi": 62 },
+          "o3": { "concentration": 28, "aqi": 42 },
+          "no2": { "concentration": 35, "aqi": 46 },
+          "so2": { "concentration": 12, "aqi": 16 },
+          "co": { "concentration": 1.8, "aqi": 18 }
+        }
+      },
+      {
+        "zone": "Zone 2",
+        "locationName": "Industrial Zone East",
+        "timestamp": "2023-11-15T08:00:00Z",
+        "meteorologicalData": {
+          "temperature": 26.8,
+          "humidity": 58,
+          "pressure": 1011,
+          "windSpeed": 4.5,
+          "windDirection": 210,
+          "precipitation": 0
+        },
+        "pollutants": {
+          "pm2_5": { "concentration": 78, "aqi": 178 },
+          "pm10": { "concentration": 95, "aqi": 95 },
+          "o3": { "concentration": 42, "aqi": 63 },
+          "no2": { "concentration": 58, "aqi": 75 },
+          "so2": { "concentration": 25, "aqi": 33 },
+          "co": { "concentration": 3.2, "aqi": 32 }
+        }
+      },
+      {
+        "zone": "Zone 3",
+        "locationName": "Residential District North",
+        "timestamp": "2023-11-15T08:00:00Z",
+        "meteorologicalData": {
+          "temperature": 23.2,
+          "humidity": 72,
+          "pressure": 1013,
+          "windSpeed": 2.8,
+          "windDirection": 150,
+          "precipitation": 0
+        },
+        "pollutants": {
+          "pm2_5": { "concentration": 32, "aqi": 89 },
+          "pm10": { "concentration": 48, "aqi": 48 },
+          "o3": { "concentration": 35, "aqi": 52 },
+          "no2": { "concentration": 28, "aqi": 37 },
+          "so2": { "concentration": 8, "aqi": 11 },
+          "co": { "concentration": 1.2, "aqi": 12 }
+        }
+      },
+      {
+        "zone": "Zone 4",
+        "locationName": "University Campus",
+        "timestamp": "2023-11-15T08:00:00Z",
+        "meteorologicalData": {
+          "temperature": 22.1,
+          "humidity": 68,
+          "pressure": 1014,
+          "windSpeed": 3.0,
+          "windDirection": 190,
+          "precipitation": 0
+        },
+        "pollutants": {
+          "pm2_5": { "concentration": 22, "aqi": 61 },
+          "pm10": { "concentration": 35, "aqi": 35 },
+          "o3": { "concentration": 18, "aqi": 27 },
+          "no2": { "concentration": 15, "aqi": 20 },
+          "so2": { "concentration": 5, "aqi": 7 },
+          "co": { "concentration": 0.8, "aqi": 8 }
+        }
+      },
+      {
+        "zone": "Zone 1",
+        "locationName": "Downtown Commercial Area",
+        "timestamp": "2023-11-15T12:00:00Z",
+        "meteorologicalData": {
+          "temperature": 27.3,
+          "humidity": 55,
+          "pressure": 1011,
+          "windSpeed": 4.2,
+          "windDirection": 195,
+          "precipitation": 0
+        },
+        "pollutants": {
+          "pm2_5": { "concentration": 52, "aqi": 142 },
+          "pm10": { "concentration": 68, "aqi": 68 },
+          "o3": { "concentration": 35, "aqi": 52 },
+          "no2": { "concentration": 42, "aqi": 55 },
+          "so2": { "concentration": 15, "aqi": 20 },
+          "co": { "concentration": 2.1, "aqi": 21 }
+        }
+      },
+      {
+        "zone": "Zone 2",
+        "locationName": "Industrial Zone East",
+        "timestamp": "2023-11-15T12:00:00Z",
+        "meteorologicalData": {
+          "temperature": 29.5,
+          "humidity": 50,
+          "pressure": 1010,
+          "windSpeed": 5.0,
+          "windDirection": 220,
+          "precipitation": 0
+        },
+        "pollutants": {
+          "pm2_5": { "concentration": 85, "aqi": 192 },
+          "pm10": { "concentration": 102, "aqi": 102 },
+          "o3": { "concentration": 48, "aqi": 72 },
+          "no2": { "concentration": 65, "aqi": 84 },
+          "so2": { "concentration": 28, "aqi": 37 },
+          "co": { "concentration": 3.5, "aqi": 35 }
+        }
+      }
+    ]
+  }

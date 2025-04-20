@@ -16,6 +16,8 @@ export const createAlert = createAsyncThunk(
   "alerts/createAlert",
   async (alertData) => {
     const response = await axios.post("/api/alerts", alertData);
+    console.log("Updating alert with ID:", id, alertData);
+
     return response.data;
   }
 );
@@ -38,6 +40,8 @@ export const deleteAlert = createAsyncThunk(
   "alerts/deleteAlert",
   async (id) => {
     await axios.delete(`/api/alerts/${id}`);
+    console.log("Deleted Alert ID:", id);  // Debugging log
+
     return id;
   }
 );
@@ -58,12 +62,7 @@ const alertSlice = createSlice({
     status: "idle",
     error: null,
   },
-  reducers: {
-    // Define the addAlert action
-    addAlert: (state, action) => {
-      state.alerts.push(action.payload);
-    },
-  },
+  reducers: {},
   extraReducers: (builder) => {
     builder
       // Fetch Alerts
@@ -82,7 +81,7 @@ const alertSlice = createSlice({
       // Create Alert
       .addCase(createAlert.fulfilled, (state, action) => {
         state.alerts.push(action.payload);
-        toast.success("Alert Added Successfully");
+      
       })
 
       // Update Alert
@@ -95,13 +94,14 @@ const alertSlice = createSlice({
           toast.success("Alert Updated Successfully");
         }
       })
+      
 
       // Delete Alert
       .addCase(deleteAlert.fulfilled, (state, action) => {
         state.alerts = state.alerts.filter((alert) => alert._id !== action.payload);
         toast.success("Alert Deleted Successfully");
       })
-
+      
       // Toggle Alert Status
       .addCase(toggleAlertStatus.fulfilled, (state, action) => {
         const index = state.alerts.findIndex(
@@ -113,8 +113,5 @@ const alertSlice = createSlice({
       });
   },
 });
-
-// Export the addAlert action
-export const { addAlert } = alertSlice.actions;
 
 export default alertSlice.reducer;

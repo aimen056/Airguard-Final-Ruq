@@ -32,8 +32,7 @@ const sendEmail = require('./routes/sendEmail');
 const alertThreshold = require('./routes/alertThreshold');
 const alertRoutes = require("./routes/alertRoutes");
 const reportRoutes = require('./routes/reportRoutes');
-const aqinowRoutes = require('./routes/aqinowRoutes');
-const airnowObservations = require("./routes/aqinowObsRoutes");
+const userRoutes = require('./routes/userRoutes');
 
 // Route Definitions
 app.use('/auth', authRoutes);
@@ -43,14 +42,11 @@ app.use('/api/sensor-locations', sensorLocations);
 app.use('/api/send-email', sendEmail);
 app.use('/api/alert-threshold', alertThreshold);
 
-app.use('/api/airnow', aqinowRoutes);
-app.use('/api/alerts', alertRoutes);
-app.use('/api/airObs', airnowObservations);
-app.use('/api/reports', reportRoutes);
 
-app.use('/api', (req, res) => {
-    res.send("Hello from AirGuard API");
-});
+app.use('/api/alerts', alertRoutes);
+app.use('/api/reports', reportRoutes);
+app.use('/api/user', userRoutes);
+
 
 // Start the server
 const PORT = process.env.PORT || 5002;

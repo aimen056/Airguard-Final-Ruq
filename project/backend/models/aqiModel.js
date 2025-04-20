@@ -2,11 +2,9 @@ const AQI = require('./AQI');
 
 const getAQIData = async (zone, date) => {
   try {
-    // Fetch data from the database
     const aqiData = await AQI.findOne({ zone, date });
 
     if (!aqiData) {
-      // If no data exists, return a default response
       return {
         zone,
         date,
