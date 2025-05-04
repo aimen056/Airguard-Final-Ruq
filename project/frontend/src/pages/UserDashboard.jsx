@@ -7,9 +7,8 @@ import { useDispatch, useSelector } from "react-redux";
 import { fetchReports } from "../redux/features/repPollutionSlice";
 import { NavLink } from "react-router-dom";
 import Heatmap from "../components/Home/Heatmap";
-import DropletIcon from "../assets/icons/droplet.svg";
-import SpeedometerIcon from "../assets/icons/speedometer.svg";
-import ThermometerIcon from "../assets/icons/thermometer.svg";
+import { toast } from "react-toastify";
+import HealthRecommendations from "../components/HealthRecommendations";
 
 const UserDashboard = () => {
   const [aqiData, setAqiData] = useState(null);
@@ -21,6 +20,9 @@ const UserDashboard = () => {
   const [sensorLocations, setSensorLocations] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [heatmapData, setHeatmapData] = useState([]);
+  const [messages, setMessages] = useState([]);
+  const [selectedMessage, setSelectedMessage] = useState(null);
+  const [unreadCount, setUnreadCount] = useState(0);
 
   const gaugeChartRef = useRef(null);
   const trendChartRef = useRef(null);
@@ -47,7 +49,6 @@ const UserDashboard = () => {
     hazardous: { min: 301, max: 500 },
   };
 
-  // Helper component for pollutant display
   const PollutantBox = ({ name, data }) => (
     <div className="flex flex-col items-center justify-center rounded-full border-2 border-gray-300 dark:border-gray-600 w-28 h-28 m-2">
       <h6 className="font-bold text-blue-600 dark:text-blue-400">{name}</h6>
@@ -56,7 +57,6 @@ const UserDashboard = () => {
     </div>
   );
 
-  // Generate random trend data
   const generateRandomTrendData = () => {
     const hours = Array.from({ length: 24 }, (_, i) => {
       const hour = i.toString().padStart(2, '0');
@@ -65,11 +65,10 @@ const UserDashboard = () => {
     
     return hours.map(time => ({
       timestamp: new Date(`2023-01-01T${time}:00`).toISOString(),
-      aqi: Math.floor(Math.random() * 150) + 50 // Random AQI between 50-200
+      aqi: Math.floor(Math.random() * 150) + 50
     }));
   };
 
-  // Generate random heatmap data
   const generateRandomHeatmapData = () => {
     const days = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
     const times = ["Morning", "Afternoon", "Evening"];
@@ -78,7 +77,7 @@ const UserDashboard = () => {
       times.map(time => ({
         x: day,
         y: time,
-        value: Math.floor(Math.random() * 100) + 30 // Random value between 30-130
+        value: Math.floor(Math.random() * 100) + 30
       }))
     );
   };
@@ -112,8 +111,52 @@ const UserDashboard = () => {
     }
   };
 
+  const fetchMessages = async () => {
+    try {
+      const user = JSON.parse(localStorage.getItem("user"));
+      const response = await axios.get(`http://localhost:5002/api/messages/user/${user._id}`);
+      setMessages(response.data);
+    } catch (error) {
+      console.error("Error fetching messages:", error);
+    }
+  };
+
+  const fetchUnreadCount = async () => {
+    try {
+      const user = JSON.parse(localStorage.getItem("user"));
+      const response = await axios.get(`http://localhost:5002/api/messages/unread-count/${user._id}`);
+      setUnreadCount(response.data.count);
+    } catch (error) {
+      console.error("Error fetching unread count:", error);
+    }
+  };
+
+  const markAsRead = async (messageId) => {
+    try {
+      await axios.patch(`http://localhost:5002/api/messages/${messageId}/read`);
+      fetchMessages();
+      fetchUnreadCount();
+    } catch (error) {
+      console.error("Error marking message as read:", error);
+    }
+  };
+
+  const acknowledgeMessage = async (messageId) => {
+    try {
+      await axios.patch(`http://localhost:5002/api/messages/${messageId}/acknowledge`);
+      toast.success("Message acknowledged");
+      fetchMessages();
+      fetchUnreadCount();
+      setSelectedMessage(null);
+    } catch (error) {
+      toast.error("Failed to acknowledge message");
+      console.error("Error acknowledging message:", error);
+    }
+  };
+
   useEffect(() => {
-    // Initialize heatmap data
+    fetchMessages();
+    fetchUnreadCount();
     setHeatmapData(generateRandomHeatmapData());
 
     if (navigator.geolocation) {
@@ -165,7 +208,6 @@ const UserDashboard = () => {
         setFormattedMarkers(formatted);
       } catch (error) {
         console.error("Error fetching sensor locations:", error);
-        // Fallback dummy sensor data
         const dummySensors = [
           { lat: 24.9, lon: 67.1, zone: "Zone 1", locationName: "Downtown", aqi: 75 },
           { lat: 33.7, lon: 73.1, zone: "Zone 2", locationName: "Industrial Area", aqi: 120 },
@@ -194,14 +236,12 @@ const UserDashboard = () => {
         const response = await axios.get(
           `http://localhost:5002/api/aqi?zone=${selectedZone}&date=${selectedDate}`
         );
-        // Ensure trendData exists in response, otherwise use dummy data
         const dataWithTrend = {
           ...response.data,
           trendData: response.data.trendData || generateRandomTrendData()
         };
         setAqiData(dataWithTrend);
 
-        // Calculate highest AQI from pollutants
         if (response.data.pollutants) {
           const pollutantValues = Object.values(response.data.pollutants).map(p => p.aqi);
           const maxAQI = Math.max(...pollutantValues);
@@ -209,13 +249,11 @@ const UserDashboard = () => {
         } else if (response.data.overallAQI) {
           setHighestAQI(response.data.overallAQI);
         } else {
-          // If no AQI data, use max from trend data
           const maxTrendAQI = Math.max(...dataWithTrend.trendData.map(d => d.aqi));
           setHighestAQI(maxTrendAQI);
         }
       } catch (error) {
         console.error("Error fetching AQI data:", error);
-        // Create fallback data structure with dummy trend
         const fallbackData = {
           overallAQI: Math.floor(Math.random() * 150) + 50,
           trendData: generateRandomTrendData(),
@@ -323,7 +361,6 @@ const UserDashboard = () => {
 
   return (
     <div className="pt-16 bg-background dark:bg-background dark:text-[#E4E4E7]">
-      {/* Search Header */}
       <header className="bg-gray-100 dark:bg-gray-800 py-2 border-b border-gray-300 dark:border-gray-700">
         <div className="w-full px-4 py-1">
           <div className="flex flex-col lg:flex-row lg:items-center justify-between">
@@ -345,13 +382,12 @@ const UserDashboard = () => {
 
       <div className="p-5 text-primaryText dark:text-secondaryText">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Main Map and Gauge Section */}
           <div className="grid grid-cols-1 md:grid-cols-2 bg-[url('./assets/Lightbg.png')] dark:bg-[url('./assets/Darkbg.png')] bg-no-repeat bg-cover bg-center rounded-3xl md:col-span-2 p-4 gap-4 shadow-2xl">
             <div className="bg-surfaceColor/60 rounded-2xl p-4">
               <HomeMap markers={formattedMarkers} fullscreen={false} />
             </div>
             <div className="bg-surfaceColor/60 rounded-2xl p-4">
-              <div className="bg-surfaceColor p-3 rounded-2xl">
+              {/* <div className="bg-surfaceColor p-3 rounded-2xl">
                 <div className="relative h-42 mt-3">
                   <canvas ref={gaugeChartRef}></canvas>
                   {aqiData && (
@@ -368,7 +404,7 @@ const UserDashboard = () => {
                     ></div>
                   )}
                 </div>
-              </div>
+              </div> */}
               <div className="bg-surfaceColor p-3 rounded-2xl">
                 <AqiCard 
                   aqiData={aqiData} 
@@ -381,7 +417,6 @@ const UserDashboard = () => {
             </div>
           </div>
           
-          {/* Welcome Card */}
           <div className="bg-surfaceColor rounded-3xl shadow-2xl p-4 gap-4">
             <div className="rounded-2xl bg-gradient-to-bl from-red-300 via-orange-300 to-amber-300 dark:bg-gradient-to-bl dark:from-emerald-500 dark:from-10% dark:via-teal-700 dark:to-50% dark:to-cyan-900 h-full">
               <div>
@@ -406,11 +441,12 @@ const UserDashboard = () => {
                     </p>
                   </div>
                 </div>
+                {/* Health Recommendations Section */}
+             
               </div>
             </div>
           </div>
 
-          {/* AQI Trend Chart */}
           <div className="bg-surfaceColor dark:bg-surfaceColor rounded-3xl shadow-2xl p-4">
             <div className="w-full">
               <h6 className="font-bold text-center mb-4">AQI Trend (Last 24 hr)</h6>
@@ -445,7 +481,6 @@ const UserDashboard = () => {
             </div>
           </div>
           
-          {/* Major Pollutants Section */}
           <div className="bg-surfaceColor dark:bg-surfaceColor rounded-3xl shadow-2xl p-4">
             <h5 className="text-center font-bold mb-4">Major Pollutants</h5>
             <div className="flex flex-wrap justify-around">
@@ -464,7 +499,6 @@ const UserDashboard = () => {
             </div>
           </div>
           
-          {/* Heatmap */}
           <div className="bg-surfaceColor dark:bg-surfaceColor rounded-3xl shadow-2xl">
             <div className="flex flex-col h-full">
               <h2 className="text-lg uppercase font-semibold text-center mt-6">
@@ -476,77 +510,120 @@ const UserDashboard = () => {
             </div>
           </div>
           
-          {/* Pollution Reports */}
           <div className="bg-surfaceColor dark:bg-surfaceColor rounded-3xl shadow-2xl">
-            <div className="bg-surfaceColor dark:bg-surfaceColor p-4 rounded-2xl h-full">
-              <h3 className="text-lg font-semibold text-center uppercase mb-4">
-                Recent Pollution Reports
-              </h3>
+        <div className="bg-surfaceColor dark:bg-surfaceColor p-4 rounded-2xl h-full">
+          <h3 className="text-lg font-semibold text-center uppercase mb-4">
+            Your Pollution Reports
+          </h3>
 
-              {status === "loading" ? (
-                <p>Loading reports...</p>
-              ) : pollutions.filter(r => r.isVerified).length === 0 ? (
-                <p className="text-gray-500 dark:text-gray-400">
-                  No verified pollution reports available.
-                </p>
-              ) : (
-                <div className="space-y-4">
-                  {pollutions
-                    .filter(r => r.isVerified)
-                    .slice(0, 3)
-                    .map((report) => (
-                      <div key={report._id} className="bg-white dark:bg-background shadow-md rounded-2xl p-4 border border-gray-300 dark:border-gray-700">
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                          <div>
-                            <p className="text-sm font-medium text-gray-500">
-                              Pollution Type:
-                            </p>
-                            <p className="text-lg font-semibold">
-                              {report.pollutionType}
-                            </p>
-                          </div>
-                          <div>
-                            <p className="text-sm font-medium text-gray-500">
-                              Location:
-                            </p>
-                            <p className="text-lg font-semibold">
-                              {report.location}
-                            </p>
-                          </div>
-                          <div>
-                            <p className="text-sm font-medium text-gray-500">
-                              Date Reported:
-                            </p>
-                            <p className="text-lg font-semibold">{report.date}</p>
-                          </div>
-                          <div>
-                            <p className="text-sm font-medium text-gray-500">
-                              Status:
-                            </p>
-                            <span className={`px-3 py-1 rounded-full text-xs font-semibold ${
-                              report.resolved ? "bg-green-500 text-white" : "bg-yellow-500 text-white"
-                            }`}>
-                              {report.resolved ? "Resolved" : "Under Review"}
-                            </span>
-                          </div>
-                        </div>
-                        <div className="mt-3">
-                          <p className="text-sm font-medium text-gray-500">
-                            Description:
-                          </p>
-                          <p className="text-gray-800 dark:text-gray-300">
-                            {report.description}
-                          </p>
+          {status === "loading" ? (
+            <p>Loading reports...</p>
+          ) : pollutions.filter(r => r.user === user?.name).length === 0 ? (
+            <p className="text-gray-500 dark:text-gray-400">
+              You haven't submitted any pollution reports yet.
+            </p>
+          ) : (
+            <div className="space-y-4">
+              {pollutions
+                .filter(r => r.user === user?.name)
+                .slice(0, 3)
+                .map((report) => (
+                  <div key={report._id} className="bg-white dark:bg-background shadow-md rounded-2xl p-4 border border-gray-300 dark:border-gray-700">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div>
+                        <p className="text-sm font-medium text-gray-500">
+                          Pollution Type:
+                        </p>
+                        <p className="text-lg font-semibold">
+                          {report.pollutionType}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-sm font-medium text-gray-500">
+                          Location:
+                        </p>
+                        <p className="text-lg font-semibold">
+                          {report.location}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-sm font-medium text-gray-500">
+                          Date Reported:
+                        </p>
+                        <p className="text-lg font-semibold">{report.date}</p>
+                      </div>
+                      <div>
+                        <p className="text-sm font-medium text-gray-500">
+                          Status:
+                        </p>
+                        <span className={`px-3 py-1 rounded-full text-xs font-semibold ${
+                          report.verificationStatus === 'verified' 
+                            ? 'bg-green-500 text-white' 
+                            : report.verificationStatus === 'rejected' 
+                              ? 'bg-red-500 text-white' 
+                              : 'bg-yellow-500 text-white'
+                        }`}>
+                          {report.verificationStatus === 'verified' 
+                            ? 'Verified' 
+                            : report.verificationStatus === 'rejected' 
+                              ? 'Rejected' 
+                              : 'Pending Review'}
+                        </span>
+                      </div>
+                    </div>
+                    {report.images?.length > 0 && (
+                      <div className="mt-3">
+                        <p className="text-sm font-medium text-gray-500">
+                          Images:
+                        </p>
+                        <div className="flex gap-2 mt-1 flex-wrap">
+                          {report.images.map((image, index) => (
+                            <a 
+                              key={index} 
+                              href={image} 
+                              target="_blank" 
+                              rel="noopener noreferrer"
+                              className="h-16 w-16"
+                            >
+                              <img 
+                                src={image} 
+                                alt={`Report ${index}`}
+                                className="h-full w-full object-cover rounded border"
+                              />
+                            </a>
+                          ))}
                         </div>
                       </div>
-                    ))}
-                </div>
-              )}
+                    )}
+                    <div className="mt-3">
+                      <p className="text-sm font-medium text-gray-500">
+                        Description:
+                      </p>
+                      <p className="text-gray-800 dark:text-gray-300">
+                        {report.description}
+                      </p>
+                    </div>
+                  </div>
+                ))}
+            </div>
+          )}
 
-              <div className="text-center mt-6">
-                <button className="bg-primaryBtnBg text-primaryBtnText font-semibold py-2 px-6 rounded-lg shadow-md transition hover:bg-opacity-90">
-                  <NavLink to={"/report"}>View All Reports</NavLink>
-                </button>
+          <div className="text-center mt-6">
+            <button className="bg-primaryBtnBg text-primaryBtnText font-semibold py-2 px-6 rounded-lg shadow-md transition hover:bg-opacity-90">
+              <NavLink to={"/report"}>View All Reports</NavLink>
+            </button>
+          </div>
+        </div>
+      </div>
+      <div className="bg-surfaceColor rounded-3xl shadow-2xl p-4 gap-4">
+            <div className="rounded-2xl h-full">
+              <div>
+               
+                
+                {/* Health Recommendations Section */}
+                <div className="bg-white dark:bg-gray-800 rounded-lg p-4 mt-4 shadow-md">
+                  <HealthRecommendations userData={user} />
+                </div>
               </div>
             </div>
           </div>

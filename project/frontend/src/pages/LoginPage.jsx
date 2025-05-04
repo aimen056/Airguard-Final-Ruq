@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 
 const LoginPage = () => {
@@ -16,9 +16,24 @@ const LoginPage = () => {
     alertFrequency: "",
     diseases: [],
     wantsAlerts: false,
+    rememberMe: false
   });
 
   const navigate = useNavigate();
+
+  // Check for saved credentials on component mount
+  useEffect(() => {
+    const savedEmail = localStorage.getItem("rememberedEmail");
+    const savedPassword = localStorage.getItem("rememberedPassword");
+    if (savedEmail && savedPassword) {
+      setFormData(prev => ({
+        ...prev,
+        email: savedEmail,
+        password: savedPassword,
+        rememberMe: true
+      }));
+    }
+  }, []);
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -27,6 +42,15 @@ const LoginPage = () => {
     if (!formData.email || !formData.password) {
       alert("Please enter email and password.");
       return;
+    }
+  
+    // Handle "Remember Me" functionality
+    if (formData.rememberMe) {
+      localStorage.setItem("rememberedEmail", formData.email);
+      localStorage.setItem("rememberedPassword", formData.password);
+    } else {
+      localStorage.removeItem("rememberedEmail");
+      localStorage.removeItem("rememberedPassword");
     }
   
     // Check for specific credentials
@@ -83,6 +107,8 @@ const LoginPage = () => {
             ...prev,
             diseases: checked ? [...prev.diseases, value] : prev.diseases.filter((d) => d !== value),
           };
+        } else if (name === "rememberMe") {
+          return { ...prev, [name]: checked };
         } else {
           return { ...prev, [name]: checked };
         }
@@ -173,7 +199,6 @@ const LoginPage = () => {
     }
   
     try {
-      // Send a request to your backend to generate a reset link
       const response = await fetch("http://localhost:5002/auth/forgot-password", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -183,12 +208,10 @@ const LoginPage = () => {
       const data = await response.json();
   
       if (response.ok) {
-        // Open the user's email client with a pre-filled email
         const subject = "Password Reset Request";
-        const body = `Click the link below to reset your password:\n\n${data.resetLink}`; // Assuming the backend returns a reset link
+        const body = `Click the link below to reset your password:\n\n${data.resetLink}`;
         const mailtoLink = `mailto:${formData.email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
   
-        // Open the default email client
         window.location.href = mailtoLink;
   
         alert("Password reset link sent to your email!");
@@ -218,7 +241,7 @@ const LoginPage = () => {
               <p className="text-lg">Your account has been created successfully.</p>
             </div>
             <div className="w-full sm:w-1/2 p-8 flex flex-col items-center">
-              <h2 className="text-[#00796B] text-2xl mb-4">What’s Next?</h2>
+              <h2 className="text-[#00796B] text-2xl mb-4">What's Next?</h2>
               <p className="mb-4">Explore your Dashboard or set up additional preferences.</p>
               <button
                 type="button"
@@ -231,33 +254,33 @@ const LoginPage = () => {
           </div>
         ) : currentView === 'forgotPassword' ? (
           <div className="w-full h-full flex flex-col items-center p-8">
-    <h2 className="text-[#00796B] text-3xl mb-4">Reset Password</h2>
-    <p className="mb-4 text-center">Enter your email to receive password reset instructions.</p>
-    <form onSubmit={handleForgotPassword} className="flex flex-col gap-4 w-full max-w-sm">
-      <input
-        type="email"
-        name="email"
-        value={formData.email}
-        onChange={handleInputChange}
-        placeholder="Email"
-        className="border border-gray-400 bg-gray-100 text-gray-800 rounded p-2 focus:ring-2 focus:ring-gray-300"
-        required
-      />
-      <button
-        type="submit"
-        className="bg-[#00796B] text-white px-4 py-2 rounded hover:bg-orange-400 transition duration-300"
-      >
-        Send Reset Link
-      </button>
-      <button
-        type="button"
-        onClick={() => setCurrentView('login')}
-        className="text-orange-400 hover:underline text-sm"
-      >
-        Back to Login
-      </button>
-    </form>
-  </div>
+            <h2 className="text-[#00796B] text-3xl mb-4">Reset Password</h2>
+            <p className="mb-4 text-center">Enter your email to receive password reset instructions.</p>
+            <form onSubmit={handleForgotPassword} className="flex flex-col gap-4 w-full max-w-sm">
+              <input
+                type="email"
+                name="email"
+                value={formData.email}
+                onChange={handleInputChange}
+                placeholder="Email"
+                className="border border-gray-400 bg-gray-100 text-gray-800 rounded p-2 focus:ring-2 focus:ring-gray-300"
+                required
+              />
+              <button
+                type="submit"
+                className="bg-[#00796B] text-white px-4 py-2 rounded hover:bg-orange-400 transition duration-300"
+              >
+                Send Reset Link
+              </button>
+              <button
+                type="button"
+                onClick={() => setCurrentView('login')}
+                className="text-orange-400 hover:underline text-sm"
+              >
+                Back to Login
+              </button>
+            </form>
+          </div>
         ) : currentView === 'alert' ? (
           <div className="flex justify-between w-full max-w-screen-lg bg-white rounded-lg shadow-lg overflow-hidden">
             <div className="w-full sm:w-1/2 bg-gradient-to-r from-orange-400 to-green-900 text-white flex flex-col justify-center items-center p-8">
@@ -322,14 +345,14 @@ const LoginPage = () => {
                   ? 'Create your account to access personalized updates.'
                   : 'Sign in to continue to your Dashboard.'}
               </p>
-              <secondary button
+              <button
                 onClick={() => toggleView(currentView === 'signup' ? 'login' : 'signup')}
                 className="border border-white rounded-full px-6 py-2 mt-4 hover:bg-white hover:text-[#00796B] transition duration-300"
               >
                 {currentView === 'signup'
                   ? 'Already have an account? Sign In'
                   : "Don't have an account? Sign Up"}
-              </secondary>
+              </button>
             </div>
             <div className="w-full sm:w-1/2 p-8 flex flex-col items-center">
               <h2 className="text-[#00796B] text-3xl mb-4 animate-flipIn">
@@ -444,15 +467,22 @@ const LoginPage = () => {
                     />
                     <div className="options flex justify-between items-center mt-2">
                       <label className="flex items-center gap-1 text-gray-800">
-                        <input type="checkbox" className="w-4 h-4 border border-gray-400 bg-white text-gray-800 rounded focus:ring-2 focus:ring-gray-300" /> Remember Me
+                        <input 
+                          type="checkbox" 
+                          name="rememberMe" 
+                          checked={formData.rememberMe}
+                          onChange={handleInputChange}
+                          className="w-4 h-4 border border-gray-400 bg-white text-gray-800 rounded focus:ring-2 focus:ring-gray-300" 
+                        /> 
+                        Remember Me
                       </label>
-                      <a
-                        href="#"
+                      <button
+                        type="button"
                         className="text-orange-400 hover:underline text-sm"
                         onClick={() => setCurrentView('forgotPassword')}
                       >
                         Forgot Password?
-                      </a>
+                      </button>
                     </div>
                   </>
                 )}

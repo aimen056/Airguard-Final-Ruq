@@ -295,6 +295,7 @@ const HomePage = () => {
                   }}
                 ></div>
               )}
+              
             </div>
             <p
               className="font-medium"
@@ -302,6 +303,15 @@ const HomePage = () => {
             >
               {aqiData ? getAqiCategory(highestAQI) : "Loading..."}
             </p>
+             {/* AQI and Major Pollutant Display */}
+             <div className="text-center">
+    <h3 className="text-l font-bold text-gray-800">
+      AQI: {aqiData?.overallAQI ?? "N/A"}
+    </h3>
+    <p className="text-sm text-gray-600">
+      Major Pollutant: PM10
+    </p>
+  </div>
           </div>
 
           <div className="absolute bottom-28 right-12 bg-red-600 text-white p-3 rounded-lg w-52 shadow-md text-center z-10">

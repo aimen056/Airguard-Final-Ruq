@@ -43,7 +43,7 @@ app.use('/api/send-email', sendEmail);
 app.use('/api/alert-threshold', alertThreshold);
 
 
-app.use('/api/alerts', alertRoutes);
+app.use('/auth/alerts', alertRoutes);
 app.use('/api/reports', reportRoutes);
 app.use('/api/user', userRoutes);
 

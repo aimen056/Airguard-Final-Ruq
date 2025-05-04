@@ -12,8 +12,8 @@ router.get('/profile', authMiddleware, async (req, res) => {
     }
     res.json(user);
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: 'Server error' });
+    console.error('Error fetching user profile:', error);
+    res.status(500).json({ error: 'Server error while fetching profile' });
   }
 });
 
@@ -33,6 +33,7 @@ router.put('/profile', authMiddleware, async (req, res) => {
       diseases 
     } = req.body;
     
+    // Check if email is being changed to one that already exists
     if (email && email !== req.user.email) {
       const existingUser = await User.findOne({ email });
       if (existingUser) {
@@ -56,7 +57,7 @@ router.put('/profile', authMiddleware, async (req, res) => {
           diseases
         })
       },
-      { new: true }
+      { new: true, runValidators: true }
     ).select('-password');
     
     res.json({ 
@@ -64,8 +65,8 @@ router.put('/profile', authMiddleware, async (req, res) => {
       user: updatedUser 
     });
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: 'Server error' });
+    console.error('Error updating profile:', error);
+    res.status(500).json({ error: 'Server error while updating profile' });
   }
 });
 

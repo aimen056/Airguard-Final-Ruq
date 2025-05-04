@@ -5,12 +5,18 @@ import HomeMap from "../components/HomeMap";
 import { 
   FaMapMarkerAlt, FaEnvelope, FaBell, FaCheck, 
   FaTimes, FaPlus, FaEdit, FaTrash, FaSave, FaUndo,
-  FaCheckCircle
+  FaCheckCircle, FaUser
 } from "react-icons/fa";
+import { useDispatch, useSelector } from "react-redux";
+import { 
+  fetchReports, 
+  verifyReport, 
+  resolveReport,
+  deleteReport 
+} from "../redux/features/repPollutionSlice";
 
 const AdminDashboard = () => {
   // State management
-  const [pollutionReports, setPollutionReports] = useState([]);
   const [sensorLocations, setSensorLocations] = useState([]);
   const [alertThreshold, setAlertThreshold] = useState(200);
   const [emailContent, setEmailContent] = useState("");
@@ -24,10 +30,13 @@ const AdminDashboard = () => {
   const [individualThresholds, setIndividualThresholds] = useState({});
   const [isLoading, setIsLoading] = useState({
     sensors: false,
-    reports: false,
     operations: false
   });
   const [error, setError] = useState(null);
+  const [users, setUsers] = useState([]);
+
+  const dispatch = useDispatch();
+  const { pollutions: pollutionReports, status: reportsStatus } = useSelector((state) => state.pollution);
 
   // AQI configuration
   const categoryColors = {
@@ -47,7 +56,75 @@ const AdminDashboard = () => {
     veryUnhealthy: { min: 201, max: 300 },
     hazardous: { min: 301, max: 500 },
   };
+  const [messages, setMessages] = useState([]);
+  const [newMessage, setNewMessage] = useState({
+    userId: '',
+    subject: '',
+    content: ''
+  });
+  const [unreadCount, setUnreadCount] = useState(0);
 
+  // Fetch messages
+  const fetchMessages = async () => {
+    try {
+      const user = JSON.parse(localStorage.getItem("user"));
+      const response = await axios.get(`http://localhost:5002/api/messages/user/${user._id}`);
+      setMessages(response.data);
+    } catch (error) {
+      console.error("Error fetching messages:", error);
+    }
+  };
+
+  // Send message
+
+const sendMessage = async () => {
+  if (!newMessage.userId || !newMessage.content) {
+    toast.error("Please select a user and enter message content");
+    return;
+  }
+
+  try {
+    const token = localStorage.getItem('token'); // Using your existing token storage
+    await axios.post("http://localhost:5002/api/messages", {
+      to: newMessage.userId,
+      subject: newMessage.subject,
+      content: newMessage.content
+    }, {
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      }
+    });
+    toast.success("Message sent successfully");
+    setNewMessage({ userId: '', subject: '', content: '' });
+    fetchMessages();
+  } catch (error) {
+    if (error.response && error.response.status === 401) {
+      // Handle unauthorized according to your existing auth flow
+      console.error("Authentication error:", error);
+      // Redirect to login or show message as per your existing auth flow
+      window.location.href = '/login'; // Or your existing redirect method
+    } else {
+      toast.error("Failed to send message");
+      console.error("Error sending message:", error);
+    }
+  }
+};
+  // Fetch unread count
+  const fetchUnreadCount = async () => {
+    try {
+      const user = JSON.parse(localStorage.getItem("user"));
+      const response = await axios.get(`http://localhost:5002/api/messages/unread-count/${user._id}`);
+      setUnreadCount(response.data.count);
+    } catch (error) {
+      console.error("Error fetching unread count:", error);
+    }
+  };
+
+  useEffect(() => {
+    fetchMessages();
+    fetchUnreadCount();
+  }, []);
   // Helper functions
   const getAqiCategory = (aqi) => {
     for (const [category, range] of Object.entries(aqiCategories)) {
@@ -59,20 +136,6 @@ const AdminDashboard = () => {
   };
 
   // Data fetching
-  const fetchPollutionReports = async () => {
-    setIsLoading(prev => ({ ...prev, reports: true }));
-    setError(null);
-    try {
-      const response = await axios.get("http://localhost:5002/api/reports");
-      setPollutionReports(response.data);
-    } catch (error) {
-      setError("Failed to load pollution reports");
-      console.error("Error fetching pollution reports:", error);
-    } finally {
-      setIsLoading(prev => ({ ...prev, reports: false }));
-    }
-  };
-
   const fetchSensorLocations = async () => {
     setIsLoading(prev => ({ ...prev, sensors: true }));
     setError(null);
@@ -206,39 +269,16 @@ const AdminDashboard = () => {
 
   // Report operations
   const handleVerifyReport = async (reportId, isVerified) => {
-    setIsLoading(prev => ({ ...prev, operations: true }));
-    try {
-      await axios.put(
-        `http://localhost:5002/api/reports/${reportId}`, 
-        { isVerified }
-      );
-      await fetchPollutionReports();
-      toast.success(`Report ${isVerified ? 'verified' : 'unverified'} successfully`);
-    } catch (error) {
-      setError("Verification failed");
-      toast.error("Failed to verify report");
-      console.error("Error verifying report:", error);
-    } finally {
-      setIsLoading(prev => ({ ...prev, operations: false }));
-    }
+    dispatch(verifyReport({ id: reportId, isVerified }));
   };
 
   const handleResolveReport = async (reportId, resolved) => {
-    setIsLoading(prev => ({ ...prev, operations: true }));
-    try {
-      await axios.put(
-        `http://localhost:5002/api/reports/${reportId}`, 
-        { resolved }
-      );
-      await fetchPollutionReports();
-      toast.success(`Report ${resolved ? 'resolved' : 'reopened'} successfully`);
-    } catch (error) {
-      setError("Operation failed");
-      toast.error("Failed to update report status");
-      console.error("Error resolving report:", error);
-    } finally {
-      setIsLoading(prev => ({ ...prev, operations: false }));
-    }
+    dispatch(resolveReport({ id: reportId, resolved }));
+  };
+
+  const handleDeleteReport = async (reportId) => {
+    if (!window.confirm("Are you sure you want to delete this report?")) return;
+    dispatch(deleteReport(reportId));
   };
 
   // Email operations
@@ -267,25 +307,40 @@ const AdminDashboard = () => {
     }
   };
 
+  const fetchUsers = async () => {
+    try {
+      const response = await axios.get("http://localhost:5002/api/users");
+      if (response.status === 200) {
+        setUsers(response.data);
+      }
+    } catch (error) {
+      console.error("Error fetching users:", error);
+      if (error.response && error.response.status === 404) {
+        console.error("Endpoint not found - check server routes");
+      }
+    }
+  };
+
   // Effects
   useEffect(() => {
-    fetchPollutionReports();
+    dispatch(fetchReports());
     fetchSensorLocations();
-  }, []);
+    fetchUsers();
+  }, [dispatch]);
 
   useEffect(() => {
     checkExceededZones(sensorLocations);
   }, [alertThreshold, sensorLocations, individualThresholds]);
 
   // Prepare map markers
-const formattedMarkers = sensorLocations.map(location => ({
-  geocode: [location.lat, location.lon],
-  label: location.zone,
-  locationName: location.locationName,
-  aqi: location.aqi,
-  status: getAqiCategory(location.aqi),
-  coverageRadius: 150 // This matches the SENSOR_COVERAGE_RADIUS in HomeMap
-}));
+  const formattedMarkers = sensorLocations.map(location => ({
+    geocode: [location.lat, location.lon],
+    label: location.zone,
+    locationName: location.locationName,
+    aqi: location.aqi,
+    status: getAqiCategory(location.aqi),
+    coverageRadius: 150
+  }));
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -309,7 +364,7 @@ const formattedMarkers = sensorLocations.map(location => ({
       <div className="max-w-7xl mx-auto px-4 mt-6 pb-10">
         {/* Map and Pollution Reports Section */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Map Section - Fixed height and overflow */}
+          {/* Map Section */}
           <div className="bg-white rounded-lg shadow-lg overflow-hidden">
             <div className="p-4 border-b border-gray-200">
               <h2 className="text-xl font-semibold">Sensor Locations</h2>
@@ -343,7 +398,7 @@ const formattedMarkers = sensorLocations.map(location => ({
               <h2 className="text-xl font-semibold">Pollution Reports</h2>
             </div>
             <div className="p-4 overflow-y-auto" style={{ maxHeight: "400px" }}>
-              {isLoading.reports ? (
+              {reportsStatus === "loading" ? (
                 <div className="flex justify-center items-center h-64">
                   <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-blue-500"></div>
                 </div>
@@ -353,18 +408,29 @@ const formattedMarkers = sensorLocations.map(location => ({
                     <div className="flex justify-between items-start">
                       <div>
                         <p className="text-gray-700">{report.description}</p>
-                        <p className="text-sm text-gray-500 mt-1">
-                          Reported by: {report.user} | {report.date}
+                        <div className="flex items-center text-sm text-gray-500 mt-1">
+                          <FaUser className="mr-1" />
+                          <span>Reported by: {report.user || "Anonymous"}</span>
+                        </div>
+                        <p className="text-sm text-gray-500">
+                          Date: {report.date} | Location: {report.location}
                         </p>
                         <p className="text-sm text-gray-500">
-                          Location: {report.location} | Type: {report.pollutionType}
+                          Type: {report.pollutionType}
                         </p>
                       </div>
-                      <span className={`px-2 py-1 text-xs rounded-full ${
-                        report.isVerified ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
-                      }`}>
-                        {report.isVerified ? 'Verified' : 'Pending'}
-                      </span>
+                      <div className="flex flex-col items-end">
+                        <span className={`px-2 py-1 text-xs rounded-full mb-2 ${
+                          report.isVerified ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
+                        }`}>
+                          {report.isVerified ? 'Verified' : 'Pending'}
+                        </span>
+                        <span className={`px-2 py-1 text-xs rounded-full ${
+                          report.resolved ? 'bg-blue-100 text-blue-800' : 'bg-orange-100 text-orange-800'
+                        }`}>
+                          {report.resolved ? 'Resolved' : 'Active'}
+                        </span>
+                      </div>
                     </div>
                     <div className="flex gap-2 mt-3">
                       <button
@@ -395,6 +461,13 @@ const formattedMarkers = sensorLocations.map(location => ({
                             <FaCheckCircle className="mr-1" /> Resolve
                           </>
                         )}
+                      </button>
+                      <button
+                        className="flex items-center bg-gray-500 text-white px-3 py-1 rounded-md hover:bg-gray-600 transition-colors disabled:opacity-50"
+                        onClick={() => handleDeleteReport(report._id)}
+                        disabled={isLoading.operations}
+                      >
+                        <FaTrash className="mr-1" /> Delete
                       </button>
                     </div>
                   </div>
@@ -604,39 +677,103 @@ const formattedMarkers = sensorLocations.map(location => ({
           </div>
         </div>
   
-        {/* Email Section */}
-        <div className="mt-6 bg-white rounded-lg shadow-lg p-4">
-          <h2 className="text-xl font-semibold mb-4">Send Email to Users</h2>
-          <input
-            type="email"
-            placeholder="Enter email address"
-            className="w-full p-2 border border-gray-300 rounded-md mb-3 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50"
-            value={emailAddress}
-            onChange={(e) => setEmailAddress(e.target.value)}
-            required
-            disabled={isLoading.operations}
-          />
-          <textarea
-            className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 min-h-[100px] disabled:opacity-50"
-            placeholder="Enter email content"
-            value={emailContent}
-            onChange={(e) => setEmailContent(e.target.value)}
-            disabled={isLoading.operations}
-          />
+         {/* Messages Section */}
+      <div className="mt-6 bg-white rounded-lg shadow-lg p-4">
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-xl font-semibold">Internal Messaging</h2>
+          <div className="flex items-center">
+            <FaBell className="mr-2" />
+            <span className="bg-red-500 text-white rounded-full px-2 py-1 text-xs">
+              {unreadCount} unread
+            </span>
+          </div>
+        </div>
+
+        {/* Message Form */}
+        <div className="mb-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Recipient</label>
+              <select
+                className="w-full p-2 border border-gray-300 rounded-md"
+                value={newMessage.userId}
+                onChange={(e) => setNewMessage({...newMessage, userId: e.target.value})}
+              >
+                <option value="">Select a user</option>
+                {users.map(user => (
+                  <option key={user._id} value={user._id}>
+                    {user.name} ({user.email})
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Subject</label>
+              <input
+                type="text"
+                className="w-full p-2 border border-gray-300 rounded-md"
+                value={newMessage.subject}
+                onChange={(e) => setNewMessage({...newMessage, subject: e.target.value})}
+                placeholder="Message subject"
+              />
+            </div>
+          </div>
+          
+          <div className="mb-4">
+            <label className="block text-sm font-medium text-gray-700 mb-1">Message</label>
+            <textarea
+              className="w-full p-2 border border-gray-300 rounded-md min-h-[100px]"
+              value={newMessage.content}
+              onChange={(e) => setNewMessage({...newMessage, content: e.target.value})}
+              placeholder="Enter your message"
+            />
+          </div>
+          
           <button
-            className="flex items-center justify-center bg-blue-500 text-white px-4 py-2 rounded-md mt-3 hover:bg-blue-600 transition-colors disabled:opacity-50"
-            onClick={handleSendEmail}
-            disabled={isLoading.operations}
+            className="flex items-center justify-center bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600 transition-colors"
+            onClick={sendMessage}
           >
-            {isLoading.operations ? (
-              <span className="animate-spin">Sending...</span>
-            ) : (
-              <>
-                <FaEnvelope className="mr-2" /> Send Email
-              </>
-            )}
+            <FaEnvelope className="mr-2" /> Send Message
           </button>
         </div>
+
+        {/* Messages List */}
+        <div>
+          <h3 className="font-medium mb-2">Recent Messages</h3>
+          <div className="space-y-3 max-h-96 overflow-y-auto">
+            {messages.length === 0 ? (
+              <p className="text-gray-500 text-center py-4">No messages sent</p>
+            ) : (
+              messages.map(message => (
+                <div key={message._id} className="p-3 bg-gray-50 rounded-lg border border-gray-200">
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <h4 className="font-semibold">{message.subject}</h4>
+                      <p className="text-sm text-gray-500">
+                        To: {users.find(u => u._id === message.to)?.name || 'Unknown'} • 
+                        {new Date(message.createdAt).toLocaleString()}
+                      </p>
+                    </div>
+                    <div className="flex items-center">
+                      {message.acknowledged ? (
+                        <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded">
+                          <FaCheck className="inline mr-1" /> Acknowledged
+                        </span>
+                      ) : (
+                        <span className="text-xs bg-yellow-100 text-yellow-800 px-2 py-1 rounded">
+                          Pending
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                  <p className="mt-2 text-gray-700">{message.content}</p>
+                </div>
+              ))
+            )}
+          </div>
+        </div>
+      </div>
+ 
   
         {/* Alert Box */}
         {exceededZones.length > 0 && (

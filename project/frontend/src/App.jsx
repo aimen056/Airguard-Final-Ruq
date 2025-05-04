@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
+import { BrowserRouter, Routes, Route, useLocation, Navigate } from "react-router-dom";
 import { Provider } from "react-redux";
 import { AuthProvider } from "./context/AuthContext";
 import ProtectedRoute from "./components/ProtectedRoute";
@@ -21,17 +21,49 @@ import { Toaster } from "react-hot-toast";
 import store from "./redux/store";
 import UserNavBar from "./components/usernavbar";
 import AdminNavBar from "./components/Adminnavbar";
-import EditProfile from "./components/EditProfile"; // Add this import
+import EditProfile from "./components/EditProfile";
 
-function Layout({ children }) {
+function AuthInitializer({ children }) {
+  const [isAuthenticated, setIsAuthenticated] = useState(null);
+  const [userRole, setUserRole] = useState(null);
+
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    const user = JSON.parse(localStorage.getItem("user"));
+    
+    if (token && user) {
+      setIsAuthenticated(true);
+      setUserRole(user.email === "airguardteam@gmail.com" ? "admin" : "user");
+    } else {
+      setIsAuthenticated(false);
+    }
+  }, []);
+
+  if (isAuthenticated === null) {
+    return <div>Loading...</div>; // Or a loading spinner
+  }
+
+  return React.cloneElement(children, { isAuthenticated, userRole });
+}
+
+function Layout({ children, isAuthenticated, userRole }) {
   const location = useLocation();
   const hideHeaderFooter = location.pathname === "/login";
-  const noFooterPages = ["/dashboard"]; // Pages without footer
+  const noFooterPages = ["/dashboard"];
   const userPages = ["/userdashboard", "/historicalReport", "/manageAlert", "/report", "/edit-profile"];
-  const adminPages = ["/dashboard", "/historicalReportAdmin"]; // Pages for admin
+  const adminPages = ["/dashboard", "/historicalReportAdmin"];
 
   const isUserPage = userPages.includes(location.pathname);
   const isAdminPage = adminPages.includes(location.pathname);
+
+  // Redirect logic based on authentication status
+  if (isAuthenticated === false && location.pathname !== "/login") {
+    return <Navigate to="/login" replace />;
+  }
+
+  if (isAuthenticated && location.pathname === "/login") {
+    return <Navigate to={userRole === "admin" ? "/dashboard" : "/userdashboard"} replace />;
+  }
 
   return (
     <>
@@ -63,32 +95,103 @@ function App() {
         <BrowserRouter>
           <Toaster />
           <Routes>
-            <Route path="/" element={<Layout><Home /></Layout>} />
-            <Route path="/about-air-quality" element={<Layout><AboutAirQuality /></Layout>} />
+            <Route path="/" element={
+              <AuthInitializer>
+                <Layout>
+                  <Home />
+                </Layout>
+              </AuthInitializer>
+            } />
+            <Route path="/about-air-quality" element={
+              <AuthInitializer>
+                <Layout>
+                  <AboutAirQuality />
+                </Layout>
+              </AuthInitializer>
+            } />
             <Route path="/login" element={<LoginPage />} />
-            <Route path="/about-us" element={<Layout><AboutUs /></Layout>} />
-            <Route path="/fullscreenMap" element={<Layout><FullscreenMapPage /></Layout>} />
+            <Route path="/about-us" element={
+              <AuthInitializer>
+                <Layout>
+                  <AboutUs />
+                </Layout>
+              </AuthInitializer>
+            } />
+            <Route path="/fullscreenMap" element={
+              <AuthInitializer>
+                <Layout>
+                  <FullscreenMapPage />
+                </Layout>
+              </AuthInitializer>
+            } />
             <Route path="/dashboard" element={
-              <ProtectedRoute>
-                <Layout><Dashboard /></Layout>
-              </ProtectedRoute>
+              <AuthInitializer>
+                <ProtectedRoute>
+                  <Layout>
+                    <Dashboard />
+                  </Layout>
+                </ProtectedRoute>
+              </AuthInitializer>
             } />
             <Route path="/userdashboard" element={
-              <ProtectedRoute>
-                <Layout><UserDashboard /></Layout>
-              </ProtectedRoute>
+              <AuthInitializer>
+                <ProtectedRoute>
+                  <Layout>
+                    <UserDashboard />
+                  </Layout>
+                </ProtectedRoute>
+              </AuthInitializer>
             } />
-            <Route path="/historicalReportAdmin" element={<Layout><HistoricalReportAdmin /></Layout>} />
-            <Route path="/historicalReport" element={<Layout><HistoricalReport /></Layout>} />
-            <Route path="/manageAlert" element={<Layout><ManageAlert /></Layout>} />
-            <Route path="/manageAlert/:id" element={<Layout><ManageAlert /></Layout>} />
-            <Route path="/report" element={<Layout><ReportPollution /></Layout>} />
-            <Route path="/homemap" element={<Layout><HomeMap /></Layout>} />
-            {/* Add the EditProfile route */}
+            <Route path="/historicalReportAdmin" element={
+              <AuthInitializer>
+                <Layout>
+                  <HistoricalReportAdmin />
+                </Layout>
+              </AuthInitializer>
+            } />
+            <Route path="/historicalReport" element={
+              <AuthInitializer>
+                <Layout>
+                  <HistoricalReport />
+                </Layout>
+              </AuthInitializer>
+            } />
+            <Route path="/manageAlert" element={
+              <AuthInitializer>
+                <Layout>
+                  <ManageAlert />
+                </Layout>
+              </AuthInitializer>
+            } />
+            <Route path="/manageAlert/:id" element={
+              <AuthInitializer>
+                <Layout>
+                  <ManageAlert />
+                </Layout>
+              </AuthInitializer>
+            } />
+            <Route path="/report" element={
+              <AuthInitializer>
+                <Layout>
+                  <ReportPollution />
+                </Layout>
+              </AuthInitializer>
+            } />
+            <Route path="/homemap" element={
+              <AuthInitializer>
+                <Layout>
+                  <HomeMap />
+                </Layout>
+              </AuthInitializer>
+            } />
             <Route path="/edit-profile" element={
-              <ProtectedRoute>
-                <Layout><EditProfile /></Layout>
-              </ProtectedRoute>
+              <AuthInitializer>
+                <ProtectedRoute>
+                  <Layout>
+                    <EditProfile />
+                  </Layout>
+                </ProtectedRoute>
+              </AuthInitializer>
             } />
             <Route path="*" element={<div>Not Found</div>} />
           </Routes>

@@ -1,4 +1,4 @@
-@tailwind base;
+/* @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
@@ -13,7 +13,7 @@ html, body {
   font-weight: 400;
 
   color-scheme: light;
-  color: rgba(0, 0, 0, 0.87);        /* Dark text color */
+  color: rgba(0, 0, 0, 0.87);       
   background-color: #FFFFFF; 
 
   font-synthesis: none;
@@ -76,6 +76,74 @@ button:focus-visible {
   }
   
 }
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+:root {
+  --navbarbg: 249, 248, 248;
+  --background: 233, 239, 255;
+  --surface: 255, 255, 255;
+  --primarytext: 17, 24, 39;
+  --primaryBtnBg: 254, 187, 65;
+  --primaryBtnText: 17, 24, 39;
+  --secBtnBg: 14, 124, 123;
+  --secBtnText: 255, 255, 255;
+  --danger:250, 79, 56;
+  --success:79, 197, 68;
+}
+
+.dark {
+  --navbarbg: 17, 24, 39;
+  --background: 22, 31, 51;
+  --surface: 40, 56, 92;
+  --primarytext: 175, 178, 184;
+  --secondarytext: 228, 228, 231;
+  --primaryBtnBg: 254, 191, 67;
+  --primaryBtnText: 17, 24, 39;
+  --secBtnBg: 10, 130, 145;
+  --secBtnText: 255, 255, 255;
+  --danger:250, 79, 56;
+  --success:79, 197, 68;
+}
+
+
+::-webkit-scrollbar {
+  width: 15px;
+}
+
+
+::-webkit-scrollbar-track {
+  background: #f1f1f1;
+}
+
+
+::-webkit-scrollbar-thumb {
+  background: #888;
+  border-radius: 5px;
+}
+
+
+::-webkit-scrollbar-thumb:hover {
+  background: #555;
+} */
+
+
+
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+/* 
+:root {
+  --grape: 114, 35, 204;
+  --dark-background:34 37 49;
+  --card-surface:50 54 69;
+
+} */
 
 * {
   margin: 0;

@@ -26,7 +26,7 @@ const EditProfile = () => {
           navigate("/");
           return;
         }
-    
+
         const response = await fetch("http://localhost:5002/api/user/profile", {
           method: "GET",
           headers: {
@@ -34,21 +34,25 @@ const EditProfile = () => {
             "Authorization": `Bearer ${token}`
           }
         });
-    
-        // First check if response is JSON
-        const contentType = response.headers.get("content-type");
-        if (!contentType || !contentType.includes("application/json")) {
-          const text = await response.text();
-          throw new Error(`Expected JSON but got: ${text.substring(0, 50)}...`);
-        }
-    
+
         if (!response.ok) {
           const errorData = await response.json();
           throw new Error(errorData.error || "Failed to fetch user data");
         }
-    
+
         const data = await response.json();
-        // ... rest of your code
+        setFormData({
+          name: data.name || "",
+          email: data.email || "",
+          contact: data.contact || "",
+          dob: data.dob ? new Date(data.dob).toISOString().split('T')[0] : "",
+          country: data.country || "Pakistan",
+          city: data.city || "",
+          notificationType: data.notificationType || "",
+          alertFrequency: data.alertFrequency || "",
+          diseases: data.diseases || [],
+          wantsAlerts: data.wantsAlerts || false,
+        });
       } catch (error) {
         console.error("Error fetching user data:", error);
         setMessage(error.message || "Failed to load profile data");
@@ -73,13 +77,13 @@ const EditProfile = () => {
         } else if (name === "diseases") {
           return {
             ...prev,
-            diseases: checked ? [...prev.diseases, value] : prev.diseases.filter((d) => d !== value),
+            diseases: checked 
+              ? [...prev.diseases, value] 
+              : prev.diseases.filter((d) => d !== value),
           };
-        } else {
-          return { ...prev, [name]: checked };
         }
       }
-      return { ...prev, [name]: value };
+      return { ...prev, [name]: type === "checkbox" ? checked : value };
     });
   };
 
@@ -131,7 +135,7 @@ const EditProfile = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-100 py-8 px-4">
+    <div className="pt-16 bg-background dark:bg-background dark:text-[#E4E4E7] min-h-screen">
       <div className="max-w-2xl mx-auto bg-white rounded-lg shadow-md overflow-hidden">
         <div className="bg-gradient-to-r from-orange-400 to-green-900 p-6 text-white">
           <h1 className="text-2xl font-bold">Edit Profile</h1>
@@ -140,11 +144,16 @@ const EditProfile = () => {
         
         <div className="p-6">
           {message && (
-            <div className={`mb-4 p-3 rounded ${message.includes("success") ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"}`}>
+            <div className={`mb-4 p-3 rounded ${
+              message.includes("success") 
+                ? "bg-green-100 text-green-700" 
+                : "bg-red-100 text-red-700"
+            }`}>
               {message}
             </div>
           )}
           
+             
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>

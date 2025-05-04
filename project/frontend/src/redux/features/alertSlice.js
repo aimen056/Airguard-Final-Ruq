@@ -6,7 +6,7 @@ import toast from "react-hot-toast";
 export const fetchAlerts = createAsyncThunk(
   "alerts/fetchAlerts",
   async () => {
-    const response = await axios.get("/api/alerts");
+    const response = await axios.get("/auth/alerts");
     return response.data;
   }
 );
@@ -15,7 +15,7 @@ export const fetchAlerts = createAsyncThunk(
 export const createAlert = createAsyncThunk(
   "alerts/createAlert",
   async (alertData) => {
-    const response = await axios.post("/api/alerts", alertData);
+    const response = await axios.post("/auth/alerts", alertData);
     console.log("Updating alert with ID:", id, alertData);
 
     return response.data;
@@ -27,7 +27,7 @@ export const updateAlert = createAsyncThunk(
   "alerts/updateAlert",
   async ({ id, ...alertData }, { rejectWithValue }) => {
     try {
-      const response = await axios.put(`/api/alerts/${id}`, alertData);
+      const response = await axios.put(`/auth/alerts/${id}`, alertData);
       return response.data;
     } catch (err) {
       return rejectWithValue(err.response.data);
@@ -39,7 +39,7 @@ export const updateAlert = createAsyncThunk(
 export const deleteAlert = createAsyncThunk(
   "alerts/deleteAlert",
   async (id) => {
-    await axios.delete(`/api/alerts/${id}`);
+    await axios.delete(`/auth/alerts/${id}`);
     console.log("Deleted Alert ID:", id);  // Debugging log
 
     return id;
@@ -50,7 +50,7 @@ export const deleteAlert = createAsyncThunk(
 export const toggleAlertStatus = createAsyncThunk(
   "alerts/toggleAlertStatus",
   async (id) => {
-    const response = await axios.patch(`/api/alerts/${id}/toggle-status`);
+    const response = await axios.patch(`/auth/alerts/${id}/toggle-status`);
     return response.data;
   }
 );
